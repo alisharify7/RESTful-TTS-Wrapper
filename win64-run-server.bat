@@ -1,0 +1,1 @@
+waitress-serve --listen 0.0.0.0:8000 --threads 8 --ident "TGS" app:app
