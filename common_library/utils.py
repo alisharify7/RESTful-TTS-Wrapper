@@ -1,8 +1,9 @@
 """
-* sahab tts wrapper REST service
-* author: @alisharify7
-* © under GPL-3.0 license.
+* REST TTS wrapper
+* author: github.com/alisharify7
 * email: alisharifyofficial@gmail.com
+* license: see LICENSE for more details.
+* Copyright (c) 2025 - ali sharifi
 * https://github.com/alisharify7/RESTful-tts-wrapper
 """
 
@@ -11,75 +12,92 @@ import hashlib
 import random
 import string
 
-from flask import Flask
-from celery import Celery, Task
+from colorama import Fore, Style, init
 
-
+# Initialize colorama
+init(autoreset=True)
 SysRandom = random.SystemRandom()
 
 
+def print_api_info(app):
+    def styled(text, color, underline=False, bold=False):
+        underline_code = "\033[4m" if underline else ""
+        bold_code = Style.BRIGHT if bold else ""
+        return f"{bold_code}{color}{underline_code}{text}{Style.RESET_ALL}"
+
+    print(
+        " *",
+        styled("© RESTful TTS wrapper", Fore.RED, underline=True, bold=True),
+    )
+    print(
+        " *",
+        styled("©", Fore.RED, underline=True, bold=True),
+        styled(
+            f"{app.config.get('API_NAME')} REST API",
+            Fore.RED,
+            underline=True,
+            bold=True,
+        ),
+    )
+
+    print(
+        " *",
+        styled("API", Fore.GREEN, underline=True, bold=True),
+        "base url:",
+        styled(app.config.get("API_BASE_URL"), Fore.YELLOW, bold=True),
+    )
+
+    print(
+        " *",
+        styled("Swagger", Fore.GREEN, underline=True, bold=True),
+        "base url:",
+        styled(app.config.get("API_DOCS_URL"), Fore.YELLOW, bold=True),
+    )
+
+    print(
+        " *",
+        styled("API", Fore.GREEN, underline=True, bold=True),
+        "short version:",
+        styled(app.config.get("API_SHORT_VERSION"), Fore.YELLOW, bold=True),
+    )
+
+    print(
+        " *",
+        styled("API", Fore.GREEN, underline=True, bold=True),
+        "absolute version:",
+        styled(app.config.get("API_ABSOLUTE_VERSION"), Fore.YELLOW, bold=True),
+    )
+
+
 def generate_random_string(length: int = 6, punctuation: bool = True) -> str:
-    """generate strong random strings
-
-    :param length: length of random string - default is 6
-    :type length: int
-
-    :param punctuation: if this flag is set to `true`, punctuation will be added to random strings
-    :type punctuation: bool
-
-     :return: str: random string
     """
-    letters = string.ascii_letters
+    Generate a strong random string.
+
+    :param length: Length of the random string. Default is 6.
+    :param punctuation: If True, punctuation characters will be included.
+    :return: A randomly generated string.
+    """
+    characters = string.ascii_letters + string.digits
     if punctuation:
-        letters += string.punctuation
-    random_string = SysRandom.choices(letters, k=length)
-
-    return "".join(random_string)
+        characters += string.punctuation
+    return "".join(SysRandom.choices(characters, k=length))
 
 
-def celery_init_app(app: Flask) -> Celery:
-    """celery init function method"""
+def to_base64(data: str) -> str:
+    """
+    Encode a string to Base64 format.
 
-    class FlaskTask(Task):  # pylint: disable=W0223
-        """Every time a task is added to queue
-        __call__ is call.
-        """
-
-        def __call__(self, *args: object, **kwargs: object) -> object:
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery_app = Celery(app.name, task_cls=FlaskTask)
-    celery_app.config_from_object(app.config["CELERY"])
-    celery_app.Task = FlaskTask
-    celery_app.set_default()
-    app.extensions["celery"] = celery_app
-    return celery_app
+    :param data: Input string to encode.
+    :return: Base64 encoded string.
+    """
+    return base64.b64encode(data.encode("utf-8")).decode("utf-8")
 
 
-class CryptoMethodUtils:
-    """cryptography utils class"""
+def to_sha256(data: str) -> str:
+    """
+    Generate SHA-256 hash of a string.
 
-    def to_base64(self, data: str) -> str:
-        """Converts a string to base64 encoding.
-
-        Args:
-          data: The string to be encoded.
-
-        Returns:
-          The base64 encoded string.
-        """
-
-        encoded_bytes = base64.b64encode(data.encode("utf-8"))
-        return encoded_bytes.decode("utf-8")
-
-    def to_sha256(self, data: str) -> str:
-        """Converts a string to md5.
-
-        Args:
-          data: The string to be encoded.
-
-        Returns:
-          The md5 encoded string.
-        """
-        return hashlib.sha256(data.encode("utf-8")).hexdigest()
+    :param data: Input string to hash.
+    :return: SHA-256 hexadecimal digest.
+    """
+    return hashlib.sha256(data.encode("utf-8")).hexdigest()

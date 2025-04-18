@@ -6,3 +6,7 @@
 * Copyright (c) 2025 - ali sharifi
 * https://github.com/alisharify7/RESTful-tts-wrapper
 """
+
+from .utils import init_sentry
+
+__all__ = ("init_sentry",)

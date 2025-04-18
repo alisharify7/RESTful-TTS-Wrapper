@@ -6,3 +6,7 @@
 * Copyright (c) 2025 - ali sharifi
 * https://github.com/alisharify7/RESTful-tts-wrapper
 """
+
+from .settings import get_config
+
+__all__ = ("get_config",)

@@ -1,31 +1,32 @@
 """
-* sahab tts wrapper REST service
-* author: @alisharify7
-* © under GPL-3.0 license.
+* REST TTS wrapper
+* author: github.com/alisharify7
 * email: alisharifyofficial@gmail.com
+* license: see LICENSE for more details.
+* Copyright (c) 2025 - ali sharifi
 * https://github.com/alisharify7/RESTful-tts-wrapper
 """
 
 import boto3
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_restx import Api
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
 
-from src.settings import Setting
-from src.logger import get_logger
+from src.config import get_config
 
-cors = CORS(resources={r"/api/*": {"origins": "*"}})
+Setting = get_config()
+
 db = SQLAlchemy()
-migrate = Migrate()
+cors_manager = CORS(resources={r"/api/*": {"origins": "*"}})
+migrate_manager = Migrate()
 
-aws_object_storage = boto3.client(
+s3_manager = boto3.client(
     "s3",
     aws_access_key_id=Setting.AWS_ACCESS_KEY_ID,
     aws_secret_access_key=Setting.AWS_SECRET_ACCESS_KEY,
     endpoint_url=Setting.AWS_ENDPOINT_URL,
 )
-
 
 api_manager = Api(
     version=Setting.API_ABSOLUTE_VERSION,
@@ -36,5 +37,3 @@ api_manager = Api(
     doc=Setting.API_DOCS_URL,
     license="",
 )
-
-global_logger = get_logger(logger_name="tts-logger", log_level=10)
