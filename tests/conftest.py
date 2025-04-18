@@ -11,7 +11,9 @@ import pytest
 import redis
 
 from src import create_app
-from src.settings import Setting
+from src.config import get_config
+
+Setting = get_config()
 
 
 class TestConfig(Setting):

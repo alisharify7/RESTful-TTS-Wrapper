@@ -7,8 +7,10 @@
 * https://github.com/alisharify7/RESTful-tts-wrapper
 """
 
-from src import get_config
-from src.settings import Development, Production
+from src.config import get_config
+from src.config.settings import Development, Production
+
+Setting = get_config()
 
 
 def test_get_config_method():

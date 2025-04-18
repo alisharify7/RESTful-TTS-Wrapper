@@ -1,63 +1,76 @@
-""" "
-* sahab tts wrapper REST service
-* author: @alisharify7
-* © under GPL-3.0 license.
+"""
+* REST TTS wrapper
+* author: github.com/alisharify7
 * email: alisharifyofficial@gmail.com
+* license: see LICENSE for more details.
+* Copyright (c) 2025 - ali sharifi
 * https://github.com/alisharify7/RESTful-tts-wrapper
 """
 
 import uuid
 from time import sleep
 
-from src.settings import Setting
-from src.keyapi_db import (
-    get_api_key,
-    set_api_key,
-    check_api_key_exists,
+import pytest
+from src.config import get_config
+from common_library.api_key import (
+    store_api_key,
+    is_api_key_valid,
+    fetch_api_key_value,
     delete_api_key,
 )
-from .conftest import API_KEY_TOKEN
+
+Setting = get_config()
 
 api_key_name = uuid.uuid4().hex
 api_key_value = uuid.uuid4().hex
-db = Setting.REDIS_API_KEY_INTERFACE
 
 
-def test_set_api_key_method():
-    """testing setting new api key in db method"""
-
-    # @ `assert` set api key method `with` expire time
-    set_api_key(api_key_name, api_key_value, ex=1)
-    sleep(1.2)
-    assert check_api_key_exists(api_key_name) == False
-
-    # @ `assert` set api key method `without` expire time
-    set_api_key(api_key_name, api_key_value)
-    sleep(1)
-    assert check_api_key_exists(api_key_name) == True
-
+@pytest.fixture
+def setup_api_key():
+    """Fixture to set up and tear down API keys for each test."""
+    store_api_key(api_key_name, api_key_value)
+    yield
     delete_api_key(api_key_name)
 
 
-def test_get_api_key_method():
-    """testing get api key method is ok"""
-    set_api_key(api_key_name, api_key_value)
-    assert get_api_key(api_key_name) == api_key_value
+def test_set_api_key_with_expire_time(setup_api_key):
+    """Test setting an API key with an expiration time."""
+    # Set the API key with an expiration time of 1 second
+    store_api_key(api_key_name, api_key_value, ex=1)
+    sleep(1.2)  # Wait for the key to expire
+    assert is_api_key_valid(api_key_name) == False
+
+
+def test_set_api_key_without_expire_time(setup_api_key):
+    """Test setting an API key without an expiration time."""
+    # Set the API key without an expiration time
+    store_api_key(api_key_name, api_key_value)
+    sleep(1)  # Short sleep to simulate checking immediately
+    assert is_api_key_valid(api_key_name) == True
     delete_api_key(api_key_name)
 
 
-def test_check_api_key_method():
-    set_api_key(api_key_name, api_key_value)
-    delete_api_key(api_key_name)
-    assert check_api_key_exists(api_key_name) == False
-
-    set_api_key(api_key_name, api_key_value)
-    assert check_api_key_exists(api_key_name) == True
+def test_get_api_key_method(setup_api_key):
+    """Test that the API key can be retrieved correctly."""
+    store_api_key(api_key_name, api_key_value)
+    assert fetch_api_key_value(api_key_name) == api_key_value
     delete_api_key(api_key_name)
 
 
-def test_delete_api_key():
-    """testing` delete api key` method is ok"""
-    set_api_key(api_key_name, api_key_value)
+def test_check_api_key_exists(setup_api_key):
+    """Test checking if the API key exists."""
+    # Ensure key is present
+    store_api_key(api_key_name, api_key_value)
+    assert is_api_key_valid(api_key_name) == True
     delete_api_key(api_key_name)
-    assert check_api_key_exists(api_key_name) == False
+
+    # Ensure key is absent after deletion
+    delete_api_key(api_key_name)
+    assert is_api_key_valid(api_key_name) == False
+
+
+def test_delete_api_key(setup_api_key):
+    """Test deleting the API key."""
+    store_api_key(api_key_name, api_key_value)
+    delete_api_key(api_key_name)
+    assert is_api_key_valid(api_key_name) == False
